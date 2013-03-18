@@ -100,6 +100,8 @@ extern unsigned int nCoinCacheSize;
 
 // Settings
 extern int64 nTransactionFee;
+// Minimum output value of relayed transactions
+extern int64 nRelayMinOutput;
 
 // Minimum disk space required - used in CheckDiskSpace()
 static const uint64 nMinDiskSpace = 52428800;

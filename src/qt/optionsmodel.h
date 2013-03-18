@@ -25,10 +25,13 @@ public:
         ProxyIP,           // QString
         ProxyPort,         // int
         ProxySocksVersion, // int
-        Fee,               // qint64
         DisplayUnit,       // BitcoinUnits::Unit
         DisplayAddresses,  // bool
         Language,          // QString
+
+        Fee,               // qint64
+        RelayMinOutput,    // qint64
+
         OptionIDRowCount,
     };
 

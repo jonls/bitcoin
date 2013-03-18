@@ -378,6 +378,46 @@
        </item>
       </layout>
      </widget>
+     <widget class="QWidget" name="tabRelaying">
+      <attribute name="title">
+       <string>&amp;Relaying</string>
+      </attribute>
+      <layout class="QVBoxLayout" name="verticalLayout_Relaying">
+       <item>
+        <widget class="QLabel" name="relayingInfoLabel">
+         <property name="text">
+          <string>Limits to the transaction that this node will relay. Transactions with outputs less than the limit will be ignored.</string>
+         </property>
+         <property name="textFormat">
+          <enum>Qt::PlainText</enum>
+         </property>
+         <property name="wordWrap">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <layout class="QFormLayout" name="formLayout_1_Relaying">
+         <item row="0" column="0">
+          <widget class="QLabel" name="relayMinOutputLabel">
+           <property name="text">
+            <string>Minimum &amp;output amount</string>
+           </property>
+           <property name="textFormat">
+            <enum>Qt::PlainText</enum>
+           </property>
+           <property name="buddy">
+            <cstring>relayMinOutput</cstring>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="1">
+          <widget class="BitcoinAmountField" name="relayMinOutput"/>
+         </item>
+        </layout>
+       </item>
+      </layout>
+     </widget>
     </widget>
    </item>
    <item>
