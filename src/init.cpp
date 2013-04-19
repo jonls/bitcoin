@@ -565,6 +565,12 @@ bool AppInit2(boost::thread_group& threadGroup)
             InitWarning(_("Warning: -paytxfee is set very high! This is the transaction fee you will pay if you send a transaction."));
     }
 
+    if (mapArgs.count("-mintxfee"))
+    {
+        if (!ParseMoney(mapArgs["-mintxfee"], nMinTxFee))
+            return InitError(strprintf(_("Invalid amount for -mintxfee=<amoun>: '%s'"), mapArgs["-mintxfee"].c_str()));
+    }
+
     // ********************************************************* Step 4: application initialization: dir lock, daemonize, pidfile, debug log
 
     std::string strDataDir = GetDataDir().string();

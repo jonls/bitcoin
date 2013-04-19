@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>540</width>
-    <height>380</height>
+    <width>640</width>
+    <height>480</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -444,6 +444,149 @@
        </item>
        <item>
         <spacer name="verticalSpacer_Relaying">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="tabMining">
+      <attribute name="title">
+       <string>M&amp;ining</string>
+      </attribute>
+      <layout class="QVBoxLayout" name="verticalLayout_Mining">
+       <item>
+        <widget class="QLabel" name="miningInfoLabel">
+         <property name="text">
+          <string>Limits to the transactions that this node will include in blocks. Transactions that do not satisfy the rules will be ignored when a new block is created. Note that transactions that are not relayed cannot be included in blocks either.</string>
+         </property>
+         <property name="textFormat">
+          <enum>Qt::PlainText</enum>
+         </property>
+         <property name="wordWrap">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <layout class="QFormLayout" name="formLayout_1_Mining">
+         <item row="0" column="0">
+          <widget class="QLabel" name="miningMinFeeLabel">
+           <property name="text">
+            <string>Minimum &amp;fee</string>
+           </property>
+           <property name="textFormat">
+            <enum>Qt::PlainText</enum>
+           </property>
+           <property name="buddy">
+            <cstring>miningMinFee</cstring>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="1">
+          <widget class="BitcoinAmountField" name="miningMinFee"/>
+         </item>
+         <item row="1" column="0">
+          <widget class="QLabel" name="miningMinFeePerKBLabel">
+           <property name="text">
+            <string>Minimum fee per &amp;kB</string>
+           </property>
+           <property name="textFormat">
+            <enum>Qt::PlainText</enum>
+           </property>
+           <property name="buddy">
+            <cstring>miningMinFeePerKB</cstring>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="1">
+          <widget class="BitcoinAmountField" name="miningMinFeePerKB"/>
+         </item>
+         <item row="2" column="0">
+          <widget class="QLabel" name="miningMinFeeOfValueLabel">
+           <property name="text">
+            <string>Minimum fee of &amp;total value</string>
+           </property>
+           <property name="textFormat">
+            <enum>Qt::PlainText</enum>
+           </property>
+           <property name="buddy">
+            <cstring>miningMinFeeOfValue</cstring>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="1">
+           <widget class="QSpinBox" name="miningMinFeeOfValue">
+             <property name="minimum">
+               <number>0</number>
+             </property>
+             <property name="maximum">
+               <number>1000000</number>
+             </property>
+             <property name="singleStep">
+               <number>1</number>
+             </property>
+             <property name="suffix">
+               <string> ppm</string>
+             </property>
+             <property name="toolTip">
+               <string>Minimum fee as millionths of total output</string>
+             </property>
+           </widget>
+         </item>
+         <item row="3" column="0">
+          <widget class="QLabel" name="miningMinOutputLabel">
+           <property name="text">
+            <string>Minimum &amp;output amount</string>
+           </property>
+           <property name="textFormat">
+            <enum>Qt::PlainText</enum>
+           </property>
+           <property name="buddy">
+            <cstring>miningMinOutput</cstring>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="1">
+          <widget class="BitcoinAmountField" name="miningMinOutput"/>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <widget class="QLabel" name="miningWhitelistAddressesInfoLabel">
+         <property name="text">
+          <string>Whitelisted addresses (each address on a line). Transactions spending from these addresses will always be included regardless of fee.</string>
+         </property>
+         <property name="textFormat">
+          <enum>Qt::PlainText</enum>
+         </property>
+         <property name="wordWrap">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPlainTextEdit" name="miningWhitelistAddresses">
+         <property name="maximumSize">
+          <size>
+           <width>16777215</width>
+           <height>16777215</height>
+          </size>
+         </property>
+         <property name="toolTip">
+          <string>Bitcoin addresses to always include in blocks.</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <spacer name="verticalSpacer_Mining">
          <property name="orientation">
           <enum>Qt::Vertical</enum>
          </property>

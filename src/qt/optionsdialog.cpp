@@ -149,6 +149,13 @@ void OptionsDialog::setMapper()
     /* Relaying */
     mapper->addMapping(ui->relayMinOutput, OptionsModel::RelayMinOutput);
     mapper->addMapping(ui->relayBlacklistAddresses, OptionsModel::RelayBlacklistAddresses);
+
+    /* Mining */
+    mapper->addMapping(ui->miningMinFee, OptionsModel::MinTxFee);
+    mapper->addMapping(ui->miningMinFeePerKB, OptionsModel::MinTxFeePerKB);
+    mapper->addMapping(ui->miningMinFeeOfValue, OptionsModel::MinTxFeeOfValue);
+    mapper->addMapping(ui->miningMinOutput, OptionsModel::MinTxOutput);
+    mapper->addMapping(ui->miningWhitelistAddresses, OptionsModel::FeeWhitelistAddresses);
 }
 
 void OptionsDialog::enableApplyButton()
@@ -248,6 +255,9 @@ void OptionsDialog::updateDisplayUnit()
         /* Update transactionFee with the current unit */
         ui->transactionFee->setDisplayUnit(model->getDisplayUnit());
         ui->relayMinOutput->setDisplayUnit(model->getDisplayUnit());
+        ui->miningMinFee->setDisplayUnit(model->getDisplayUnit());
+        ui->miningMinFeePerKB->setDisplayUnit(model->getDisplayUnit());
+        ui->miningMinOutput->setDisplayUnit(model->getDisplayUnit());
     }
 }
 

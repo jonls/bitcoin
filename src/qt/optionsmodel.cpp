@@ -51,13 +51,26 @@ void OptionsModel::Init()
     language = settings.value("language", "").toString();
 
     nTransactionFee = settings.value("nTransactionFee").toLongLong();
-    nRelayMinOutput = settings.value("nRelayMinOutput").toLongLong();
+    nRelayMinOutput = settings.value("nRelayMinOutput", nRelayMinOutput).toLongLong();
+
+    nMinTxFee = settings.value("nMinTxFee", nMinTxFee).toLongLong();
+    nMinTxFeePerKB = settings.value("nMinTxFeePerKB", nMinTxFeePerKB).toLongLong();
+    nMinTxOutput = settings.value("nMinTxOutput", nMinTxOutput).toLongLong();
+    dMinTxFeeOfValue = settings.value("dMinTxFeeOfValue", dMinTxFeeOfValue).toDouble();
 
     relayBlacklistAddresses.clear();
     int size = settings.beginReadArray("relayBlacklistAddresses");
     for (int i = 0; i < size; i++) {
         settings.setArrayIndex(i);
         relayBlacklistAddresses.insert(CBitcoinAddress(settings.value("address").toString().toStdString()));
+    }
+    settings.endArray();
+
+    feeWhitelistAddresses.clear();
+    size = settings.beginReadArray("feeWhitelistAddresses");
+    for (int i = 0; i < size; i++) {
+        settings.setArrayIndex(i);
+        feeWhitelistAddresses.insert(CBitcoinAddress(settings.value("address").toString().toStdString()));
     }
     settings.endArray();
 
@@ -217,6 +230,21 @@ QVariant OptionsModel::data(const QModelIndex & index, int role) const
             }
             return QVariant(QString::fromStdString(s));
         }
+        case MinTxFee:
+            return QVariant(nMinTxFee);
+        case MinTxFeePerKB:
+            return QVariant(nMinTxFeePerKB);
+        case MinTxOutput:
+            return QVariant(nMinTxOutput);
+        case MinTxFeeOfValue:
+            return QVariant((int)(dMinTxFeeOfValue * 1000000));
+        case FeeWhitelistAddresses: {
+            std::string s;
+            BOOST_FOREACH(const CBitcoinAddress& addr, feeWhitelistAddresses) {
+                s += addr.ToString() + "\n";
+            }
+            return QVariant(QString::fromStdString(s));
+        }
         default:
             return QVariant();
         }
@@ -322,6 +350,49 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
                 CBitcoinAddress btaddr(addr);
                 if (btaddr.IsValid()) {
                     relayBlacklistAddresses.insert(btaddr);
+                    settings.setArrayIndex(i++);
+                    settings.setValue("address", QString::fromStdString(btaddr.ToString()));
+                }
+            }
+            settings.endArray();
+        }
+        break;
+        case MinTxFee:
+            nMinTxFee = value.toLongLong();
+            settings.setValue("nMinTxFee", nMinTxFee);
+            break;
+        case MinTxFeePerKB:
+            nMinTxFeePerKB = value.toLongLong();
+            settings.setValue("nMinTxFeePerKB", nMinTxFeePerKB);
+            break;
+        case MinTxOutput:
+            nMinTxOutput = value.toLongLong();
+            settings.setValue("nMinTxOutput", nMinTxOutput);
+            break;
+        case MinTxFeeOfValue:
+            dMinTxFeeOfValue = value.toInt() / 1000000.0;
+            settings.setValue("dMinTxFeeOfValue", dMinTxFeeOfValue);
+            break;
+        case FeeWhitelistAddresses: {
+            std::vector<std::string> addresses;
+            std::string s = value.toString().toStdString();
+            std::string::size_type prev_pos = 0, pos = 0;
+            while ((pos = s.find("\n", pos)) != std::string::npos) {
+                std::string substring(s.substr(prev_pos, pos-prev_pos));
+                boost::algorithm::trim(substring);
+                addresses.push_back(substring);
+                prev_pos = ++pos;
+            }
+            addresses.push_back(s.substr(prev_pos, pos-prev_pos));
+
+            feeWhitelistAddresses.clear();
+
+            int i = 0;
+            settings.beginWriteArray("feeWhitelistAddresses");
+            BOOST_FOREACH(const std::string& addr, addresses) {
+                CBitcoinAddress btaddr(addr);
+                if (btaddr.IsValid()) {
+                    feeWhitelistAddresses.insert(btaddr);
                     settings.setArrayIndex(i++);
                     settings.setValue("address", QString::fromStdString(btaddr.ToString()));
                 }

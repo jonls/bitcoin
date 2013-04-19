@@ -47,6 +47,8 @@ static const unsigned int UNDOFILE_CHUNK_SIZE = 0x100000; // 1 MiB
 static const unsigned int MEMPOOL_HEIGHT = 0x7FFFFFFF;
 /** Fees smaller than this (in satoshi) are considered zero fee (for transaction creation) */
 static const int64 MIN_TX_FEE = 10000;
+/** Fees smaller than this fraction of total output are considered zero (for block inclusion) */
+static const double MIN_TX_FEE_OF_VALUE = 0.00001;
 /** Fees smaller than this (in satoshi) are considered zero fee (for relaying) */
 static const int64 MIN_RELAY_TX_FEE = 10000;
 /** No amount larger than this (in satoshi) is valid */
@@ -105,6 +107,13 @@ extern int64 nTransactionFee;
 extern int64 nRelayMinOutput;
 // Transactions to these addresses will not be relayed
 extern std::set<CBitcoinAddress> relayBlacklistAddresses;
+
+// Block inclusion settings
+extern int64 nMinTxFee;
+extern int64 nMinTxFeePerKB;
+extern int64 nMinTxOutput;
+extern double dMinTxFeeOfValue;
+extern std::set<CBitcoinAddress> feeWhitelistAddresses;
 
 // Minimum disk space required - used in CheckDiskSpace()
 static const uint64 nMinDiskSpace = 52428800;

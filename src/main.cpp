@@ -69,6 +69,24 @@ int64 nTransactionFee = 0;
 int64 nRelayMinOutput = 0;
 set<CBitcoinAddress> relayBlacklistAddresses;
 
+// Block inclusion settings
+// Minimum fee for block inclusion disregarding transaction size.
+int64 nMinTxFee = MIN_TX_FEE;
+// Fee-per-kilobyte amount considered the same as "free"
+// Be careful setting this: if you set it to zero then
+// a transaction spammer can cheaply fill blocks using
+// 1-satoshi-fee transactions. It should be set above the real
+// cost to you of processing a transaction.
+int64 nMinTxFeePerKB = MIN_TX_FEE;
+// Minimum output that is acceptable for block inclusion. If
+// any output is smaller the transaction will not be included.
+int64 nMinTxOutput = 0;
+// Minimum fee as fraction of total transaction output.
+double dMinTxFeeOfValue = MIN_TX_FEE_OF_VALUE;
+// Addresses that are allowed as inputs even without
+// paying the required fees.
+set<CBitcoinAddress> feeWhitelistAddresses;
+
 
 
 //////////////////////////////////////////////////////////////////////////////
@@ -4205,15 +4223,6 @@ CBlockTemplate* CreateNewBlock(CReserveKey& reservekey)
     unsigned int nBlockMinSize = GetArg("-blockminsize", 0);
     nBlockMinSize = std::min(nBlockMaxSize, nBlockMinSize);
 
-    // Fee-per-kilobyte amount considered the same as "free"
-    // Be careful setting this: if you set it to zero then
-    // a transaction spammer can cheaply fill blocks using
-    // 1-satoshi-fee transactions. It should be set above the real
-    // cost to you of processing a transaction.
-    int64 nMinTxFee = MIN_TX_FEE;
-    if (mapArgs.count("-mintxfee"))
-        ParseMoney(mapArgs["-mintxfee"], nMinTxFee);
-
     // Collect memory pool transactions into the block
     int64 nFees = 0;
     {
@@ -4320,6 +4329,38 @@ CBlockTemplate* CreateNewBlock(CReserveKey& reservekey)
             // second layer cached modifications just for this transaction
             CCoinsViewCache viewTemp(view, true);
 
+            if (!tx.HaveInputs(viewTemp))
+                continue;
+
+            // Check whether transaction is from whitelisted source
+            bool fWhitelistedTx = true;
+            BOOST_FOREACH(const CTxIn& txin, tx.vin)
+            {
+                const CCoins &coins = viewTemp.GetCoins(txin.prevout.hash);
+                const CTxOut& prev = coins.vout[txin.prevout.n];
+
+                txnouttype type;
+                vector<CTxDestination> addresses;
+                int nRequired;
+                if (!ExtractDestinations(prev.scriptPubKey, type, addresses, nRequired))
+                {
+                    fWhitelistedTx = false;
+                    break;
+                }
+
+                BOOST_FOREACH(const CTxDestination& addr, addresses)
+                {
+                    if (feeWhitelistAddresses.find(CBitcoinAddress(addr)) == feeWhitelistAddresses.end())
+                    {
+                        fWhitelistedTx = false;
+                        break;
+                    }
+                }
+            }
+
+            if (fWhitelistedTx && fDebug)
+                printf("CreateNewBlock(): whitelisted txid %s\n", tx.GetHash().ToString().c_str());
+
             // Size limits
             unsigned int nTxSize = ::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION);
             if (nBlockSize + nTxSize >= nBlockMaxSize)
@@ -4330,9 +4371,42 @@ CBlockTemplate* CreateNewBlock(CReserveKey& reservekey)
             if (nBlockSigOps + nTxSigOps >= MAX_BLOCK_SIGOPS)
                 continue;
 
-            // Skip free transactions if we're past the minimum block size:
-            if (fSortedByFee && (dFeePerKb < nMinTxFee) && (nBlockSize + nTxSize >= nBlockMinSize))
-                continue;
+            // Skip transactions with dust output
+            if (!fWhitelistedTx)
+            {
+                bool fOutputsAccepted = true;
+                BOOST_FOREACH(const CTxOut& txout, tx.vout)
+                {
+                    if (txout.nValue < nMinTxOutput) {
+                        fOutputsAccepted = false;
+                        break;
+                    }
+                }
+
+                if (!fOutputsAccepted)
+                {
+                    printf("CreateNewBlock(): tx filtered by dust limit txid %s\n", tx.GetHash().ToString().c_str());
+                    continue;
+                }
+            }
+
+            int64 nTxFees = tx.GetValueIn(viewTemp)-tx.GetValueOut();
+
+            // Check that fee is acceptable
+            if (!fWhitelistedTx)
+            {
+                if (fSortedByFee && (nBlockSize + nTxSize >= nBlockMinSize))
+                {
+                    int64 nMinValueFee = tx.GetValueOut() * dMinTxFeeOfValue;
+                    int64 nMinFee = std::max(nMinTxFee, nMinValueFee);
+                    printf("CreateNewBlock(): tx min fee %"PRI64u" txid %s\n", nMinFee, tx.GetHash().ToString().c_str());
+                    if (nTxFees < nMinFee || dFeePerKb < nMinTxFeePerKB)
+                    {
+                        printf("CreateNewBlock(): tx filtered by min fee (%"PRI64u") txid %s\n", nTxFees, tx.GetHash().ToString().c_str());
+                        continue;
+                    }
+                }
+            }
 
             // Prioritize by fee once past the priority size or we run out of high-priority
             // transactions:
@@ -4343,11 +4417,6 @@ CBlockTemplate* CreateNewBlock(CReserveKey& reservekey)
                 comparer = TxPriorityCompare(fSortedByFee);
                 std::make_heap(vecPriority.begin(), vecPriority.end(), comparer);
             }
-
-            if (!tx.HaveInputs(viewTemp))
-                continue;
-
-            int64 nTxFees = tx.GetValueIn(viewTemp)-tx.GetValueOut();
 
             nTxSigOps += tx.GetP2SHSigOpCount(viewTemp);
             if (nBlockSigOps + nTxSigOps >= MAX_BLOCK_SIGOPS)

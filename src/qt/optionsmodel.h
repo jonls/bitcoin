@@ -33,6 +33,12 @@ public:
         RelayMinOutput,    // qint64
         RelayBlacklistAddresses, // QString
 
+        MinTxFee,          // qint64
+        MinTxFeePerKB,     // qint64
+        MinTxOutput,       // qint64
+        MinTxFeeOfValue,   // int
+        FeeWhitelistAddresses, // QString
+
         OptionIDRowCount,
     };
 
