@@ -9,6 +9,7 @@
 #include "sync.h"
 #include "net.h"
 #include "script.h"
+#include "base58.h"
 
 #include <list>
 
@@ -102,6 +103,8 @@ extern unsigned int nCoinCacheSize;
 extern int64 nTransactionFee;
 // Minimum output value of relayed transactions
 extern int64 nRelayMinOutput;
+// Transactions to these addresses will not be relayed
+extern std::set<CBitcoinAddress> relayBlacklistAddresses;
 
 // Minimum disk space required - used in CheckDiskSpace()
 static const uint64 nMinDiskSpace = 52428800;

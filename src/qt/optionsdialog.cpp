@@ -148,6 +148,7 @@ void OptionsDialog::setMapper()
 
     /* Relaying */
     mapper->addMapping(ui->relayMinOutput, OptionsModel::RelayMinOutput);
+    mapper->addMapping(ui->relayBlacklistAddresses, OptionsModel::RelayBlacklistAddresses);
 }
 
 void OptionsDialog::enableApplyButton()

@@ -67,6 +67,7 @@ int64 nHPSTimerStart = 0;
 // Settings
 int64 nTransactionFee = 0;
 int64 nRelayMinOutput = 0;
+set<CBitcoinAddress> relayBlacklistAddresses;
 
 
 
@@ -659,6 +660,18 @@ bool CTxMemPool::accept(CValidationState &state, CTransaction &tx, bool fCheckIn
     {
         if (txout.nValue < nRelayMinOutput)
             return error("CTxMemPool::accept() : transaction output smaller than user defined limit");
+
+        txnouttype type;
+        vector<CTxDestination> addresses;
+        int nRequired;
+        if (!ExtractDestinations(txout.scriptPubKey, type, addresses, nRequired))
+            return error("CTxMemPool::accept() : unable to check transaction destinations");
+
+        BOOST_FOREACH(const CTxDestination& addr, addresses)
+        {
+            if (relayBlacklistAddresses.find(CBitcoinAddress(addr)) != relayBlacklistAddresses.end())
+                return error("CTxMemPool::accept() : transaction destination blacklisted");
+        }
     }
 
     // is it already in the memory pool?

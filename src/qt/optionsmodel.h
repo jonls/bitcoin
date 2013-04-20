@@ -31,6 +31,7 @@ public:
 
         Fee,               // qint64
         RelayMinOutput,    // qint64
+        RelayBlacklistAddresses, // QString
 
         OptionIDRowCount,
     };

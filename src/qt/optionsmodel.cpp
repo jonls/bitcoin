@@ -1,6 +1,8 @@
 #include "optionsmodel.h"
 
 #include "bitcoinunits.h"
+#include <boost/algorithm/string.hpp>
+
 #include "init.h"
 #include "walletdb.h"
 #include "guiutil.h"
@@ -50,6 +52,14 @@ void OptionsModel::Init()
 
     nTransactionFee = settings.value("nTransactionFee").toLongLong();
     nRelayMinOutput = settings.value("nRelayMinOutput").toLongLong();
+
+    relayBlacklistAddresses.clear();
+    int size = settings.beginReadArray("relayBlacklistAddresses");
+    for (int i = 0; i < size; i++) {
+        settings.setArrayIndex(i);
+        relayBlacklistAddresses.insert(CBitcoinAddress(settings.value("address").toString().toStdString()));
+    }
+    settings.endArray();
 
     // These are shared with core Bitcoin; we want
     // command-line options to override the GUI settings:
@@ -200,6 +210,13 @@ QVariant OptionsModel::data(const QModelIndex & index, int role) const
             return settings.value("language", "");
         case RelayMinOutput:
             return QVariant(nRelayMinOutput);
+        case RelayBlacklistAddresses: {
+            std::string s;
+            BOOST_FOREACH(const CBitcoinAddress& addr, relayBlacklistAddresses) {
+                s += addr.ToString() + "\n";
+            }
+            return QVariant(QString::fromStdString(s));
+        }
         default:
             return QVariant();
         }
@@ -285,6 +302,33 @@ bool OptionsModel::setData(const QModelIndex & index, const QVariant & value, in
             nRelayMinOutput = value.toLongLong();
             settings.setValue("nRelayMinOutput", nRelayMinOutput);
             break;
+        case RelayBlacklistAddresses: {
+            std::vector<std::string> addresses;
+            std::string s = value.toString().toStdString();
+            std::string::size_type prev_pos = 0, pos = 0;
+            while ((pos = s.find("\n", pos)) != std::string::npos) {
+                std::string substring(s.substr(prev_pos, pos-prev_pos));
+                boost::algorithm::trim(substring);
+                addresses.push_back(substring);
+                prev_pos = ++pos;
+            }
+            addresses.push_back(s.substr(prev_pos, pos-prev_pos));
+
+            relayBlacklistAddresses.clear();
+
+            int i = 0;
+            settings.beginWriteArray("relayBlacklistAddresses");
+            BOOST_FOREACH(const std::string& addr, addresses) {
+                CBitcoinAddress btaddr(addr);
+                if (btaddr.IsValid()) {
+                    relayBlacklistAddresses.insert(btaddr);
+                    settings.setArrayIndex(i++);
+                    settings.setValue("address", QString::fromStdString(btaddr.ToString()));
+                }
+            }
+            settings.endArray();
+        }
+        break;
         default:
             break;
         }
